@@ -7,4 +7,3 @@ edition.workspace = true
 tokio = { workspace = true }
 rand = { workspace = true }
 rand_distr = { workspace = true }
-tracing = { workspace = true }

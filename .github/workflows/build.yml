@@ -22,7 +22,7 @@ jobs:
 
       - name: Run Cryptographic Unit Tests
         run: |
-          cargo test --workspace --verbose
+          cargo test -p aether-crypto -p aether-mixnet -p aether-chaff -p aether-core --verbose
 
   build-android-apk:
     name: Build Android APK

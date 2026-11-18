@@ -179,15 +179,19 @@ impl SphinxBuilder {
             .map_err(|_| SphinxError::LayerEncryptionError)?;
         let nonce = Nonce::from_slice(&[0u8; 12]);
         
-        // استخراج معرف القفزة القادمة
+        let decrypted_beta = cipher.decrypt(nonce, &packet.header.beta[..])
+            .map_err(|_| SphinxError::LayerEncryptionError)?;
+
+        // استخراج معرف القفزة القادمة بعد فك التشفير
         let mut next_id = [0u8; 16];
-        next_id.copy_from_slice(&packet.header.beta[..16]);
+        next_id.copy_from_slice(&decrypted_beta[..16]);
 
         let is_exit = next_id == [0u8; 16];
 
-        // إزاحة طبقة التوجيه للقفزة القادمة
+        // إزاحة طبقة التوجيه للقفزة القادمة وتعبئة الباقي بحشو أصفار
         let mut next_beta = [0u8; ROUTING_INFO_SIZE];
-        next_beta[..ROUTING_INFO_SIZE - 16].copy_from_slice(&packet.header.beta[16..]);
+        let remaining_len = (decrypted_beta.len() - 16).min(ROUTING_INFO_SIZE);
+        next_beta[..remaining_len].copy_from_slice(&decrypted_beta[16..16 + remaining_len]);
 
         // فك تشفير طبقة واحدة من الحمولة
         let payload_cipher = ChaCha20Poly1305::new_from_slice(&keys.payload_key)
