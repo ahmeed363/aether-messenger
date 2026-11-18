@@ -5,6 +5,7 @@ pub mod sphinx;
 pub mod topology;
 pub mod surb;
 pub mod client;
+pub mod mailbox;
 
 pub use sphinx::{SphinxBuilder, SphinxPacket, SphinxHeader, SPHINX_PAYLOAD_SIZE};
 pub use topology::{NetworkTopology, MixNode, GatewayNode, SelectedRoute};

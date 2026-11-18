@@ -2,6 +2,7 @@
 //! تجمع محرك التشفير الهجين، عميل Nym Mixnet، تيار الحزم المستمرة (Chaff)، ومعالج الوسائط اللامركزي.
 
 pub mod media;
+pub mod duress;
 
 pub use aether_crypto as crypto;
 pub use aether_mixnet as mixnet;
