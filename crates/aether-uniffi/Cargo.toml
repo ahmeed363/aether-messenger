@@ -1,0 +1,21 @@
+[package]
+name = "aether-uniffi"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+crate-type = ["lib", "cdylib", "staticlib"]
+name = "aether_uniffi"
+
+[dependencies]
+aether-core = { path = "../aether-core" }
+aether-crypto = { path = "../aether-crypto" }
+aether-mixnet = { path = "../aether-mixnet" }
+aether-chaff = { path = "../aether-chaff" }
+uniffi = { workspace = true }
+tokio = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+[build-dependencies]
+uniffi = { workspace = true, features = ["build"] }

@@ -1,0 +1,36 @@
+namespace aether {
+    AetherSession init_aether_session();
+};
+
+[Error]
+enum AetherError {
+    "CryptoFailed",
+    "MixnetUnreachable",
+    "BiometricVerificationFailed",
+    "InvalidPayload",
+    "MemoryWiped",
+};
+
+dictionary MixnetStatus {
+    boolean connected;
+    u64 dummy_packets_sent;
+    u64 real_packets_sent;
+    double current_chaff_rate;
+    string active_circuit;
+};
+
+interface AetherSession {
+    [Throws=AetherError]
+    boolean unlock_with_biometrics(sequence<u8> enclave_signature);
+
+    [Throws=AetherError]
+    string send_secure_message(string recipient_hex_key, string message_text);
+
+    [Throws=AetherError]
+    string send_secure_attachment(string recipient_hex_key, string filename, string mime_type, sequence<u8> data);
+
+    [Throws=AetherError]
+    void purge_session_keys();
+
+    MixnetStatus get_mixnet_status();
+};
