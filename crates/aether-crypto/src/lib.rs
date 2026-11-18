@@ -1,6 +1,8 @@
 //! aether-crypto: النواة التشفيرية لتطبيق أثير
 //! تدعم التشفير الهجين، مسح الذاكرة الفوري (Zeroize)، وتبديل المفاتيح المؤقتة لكل رسالة (Double Ratchet).
 
+pub mod handshake;
+
 use zeroize::{Zeroize, ZeroizeOnDrop};
 use x25519_dalek::{EphemeralSecret, PublicKey};
 use chacha20poly1305::{
