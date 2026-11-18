@@ -5,7 +5,7 @@ on:
     branches: [ "master", "main" ]
   pull_request:
     branches: [ "master", "main" ]
-  workflow_dispatch: # يتيح تشغيل البناء يدوياً بنقرة زر من موقع GitHub
+  workflow_dispatch:
 
 jobs:
   build-rust-core:
@@ -38,6 +38,9 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
       - name: Install Rust Toolchain & Android Targets
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -64,7 +67,6 @@ jobs:
       - name: Build Android APK
         working-directory: mobile/android
         run: |
-          chmod +x gradlew || true
           gradle assembleDebug --stacktrace
 
       - name: Upload Downloadable APK Artifact

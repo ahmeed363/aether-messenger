@@ -100,14 +100,14 @@ impl SphinxBuilder {
 
         let num_hops = hops_keys.len();
         let mut rng = OsRng;
-        let ephemeral_secret = EphemeralSecret::random_from_rng(&mut rng);
-        let initial_alpha = PublicKey::from(&ephemeral_secret);
+        let sender_secret = StaticSecret::random_from_rng(&mut rng);
+        let initial_alpha = PublicKey::from(&sender_secret);
 
         // 1. حساب الأسرار المشتركة ومفاتيح الطبقات لكل عقدة
         let mut layer_keys_list = Vec::with_capacity(num_hops);
         for &node_pk_bytes in hops_keys.iter() {
             let node_pk = PublicKey::from(node_pk_bytes);
-            let shared = ephemeral_secret.diffie_hellman(&node_pk);
+            let shared = sender_secret.diffie_hellman(&node_pk);
             layer_keys_list.push(LayerKeys::derive(shared.as_bytes()));
         }
 
