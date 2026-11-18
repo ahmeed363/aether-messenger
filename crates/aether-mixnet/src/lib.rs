@@ -70,5 +70,6 @@ mod tests {
             .expect("فشل تقشير الطبقة الثالثة");
         assert!(hop3_result.is_exit_hop);
         assert_eq!(hop3_result.next_hop_id, [0u8; 16]);
+        assert_eq!(&hop3_result.next_packet.payload[..secret_message.len()], secret_message);
     }
 }
