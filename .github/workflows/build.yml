@@ -1,0 +1,100 @@
+name: Build Aether Messenger (APK & Rust Core)
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  pull_request:
+    branches: [ "master", "main" ]
+  workflow_dispatch: # يتيح تشغيل البناء يدوياً بنقرة زر من موقع GitHub
+
+jobs:
+  build-rust-core:
+    name: Test & Verify Rust Core Engine
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu
+
+      - name: Run Cryptographic Unit Tests
+        run: |
+          cargo test --workspace --verbose
+
+  build-android-apk:
+    name: Build Android APK
+    needs: build-rust-core
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Rust Toolchain & Android Targets
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android, armv7-linux-androideabi, x86_64-linux-android
+
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r26b
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk
+
+      - name: Compile Rust Core for Android (arm64, armv7, x86_64)
+        run: |
+          mkdir -p mobile/android/app/src/main/jniLibs/arm64-v8a
+          mkdir -p mobile/android/app/src/main/jniLibs/armeabi-v7a
+          mkdir -p mobile/android/app/src/main/jniLibs/x86_64
+
+          cargo ndk -t arm64-v8a -o mobile/android/app/src/main/jniLibs build --release -p aether-uniffi
+          cargo ndk -t armeabi-v7a -o mobile/android/app/src/main/jniLibs build --release -p aether-uniffi
+          cargo ndk -t x86_64 -o mobile/android/app/src/main/jniLibs build --release -p aether-uniffi
+
+      - name: Build Android APK
+        working-directory: mobile/android
+        run: |
+          chmod +x gradlew || true
+          gradle assembleDebug --stacktrace
+
+      - name: Upload Downloadable APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Aether-Messenger-Debug-APK
+          path: mobile/android/app/build/outputs/apk/debug/*.apk
+          retention-days: 14
+
+  build-ios-framework:
+    name: Build iOS XCFramework (SwiftUI)
+    needs: build-rust-core
+    runs-on: macos-14
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Rust Toolchain & iOS Targets
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios, aarch64-apple-ios-sim, x86_64-apple-ios
+
+      - name: Build iOS Static Libraries
+        run: |
+          cargo build --release --target aarch64-apple-ios -p aether-uniffi
+          cargo build --release --target aarch64-apple-ios-sim -p aether-uniffi
+
+      - name: Package XCFramework Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Aether-iOS-Binaries
+          path: target/aarch64-apple-ios/release/libaether_uniffi.a
+          retention-days: 14
