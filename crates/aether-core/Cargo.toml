@@ -1,0 +1,14 @@
+[package]
+name = "aether-core"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+aether-crypto = { path = "../aether-crypto" }
+aether-mixnet = { path = "../aether-mixnet" }
+aether-chaff = { path = "../aether-chaff" }
+zeroize = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+thiserror = { workspace = true }
+rand = { workspace = true }

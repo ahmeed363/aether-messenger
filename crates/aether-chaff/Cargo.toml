@@ -1,0 +1,10 @@
+[package]
+name = "aether-chaff"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+tokio = { workspace = true }
+rand = { workspace = true }
+rand_distr = { workspace = true }
+tracing = { workspace = true }
