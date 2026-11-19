@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>أثيـر | Aether P2P Web Messenger</title>
+  <title>أثيـر | Aether Web Messenger</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -19,18 +19,18 @@
       font-family: 'JetBrains Mono', monospace;
     }
     .custom-scrollbar::-webkit-scrollbar {
-      width: 6px;
+      width: 5px;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
       background: #1e293b;
       border-radius: 4px;
     }
-    .emerald-glow {
-      box-shadow: 0 0 25px rgba(0, 229, 153, 0.2);
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
     }
   </style>
 </head>
-<body class="text-slate-100 min-h-screen flex flex-col antialiased selection:bg-[#00E599]/30 selection:text-[#00E599]">
+<body class="text-slate-100 min-h-screen flex flex-col antialiased select-none">
 
   <!-- Top Global Header -->
   <header class="h-16 bg-[#0B0E14] border-b border-slate-800/80 px-6 flex items-center justify-between z-30 sticky top-0">
@@ -43,124 +43,122 @@
       </div>
       <div>
         <div class="flex items-center gap-2">
-          <h1 class="text-lg font-bold text-white tracking-wide">أثيـر <span class="text-[#00E599] font-mono text-sm">AETHER P2P</span></h1>
-          <span class="text-[10px] bg-[#00E599]/15 text-[#00E599] px-2 py-0.5 rounded font-mono border border-[#00E599]/30">Serverless • WebRTC</span>
+          <h1 class="text-lg font-bold text-white tracking-wide">أثيـر <span class="text-[#00E599] font-mono text-sm">AETHER</span></h1>
+          <span class="text-[10px] bg-[#00E599]/15 text-[#00E599] px-2 py-0.5 rounded font-mono border border-[#00E599]/30">P2P Decentralized</span>
         </div>
-        <p class="text-[11px] text-slate-400">مراسلة مباشرة جهاز-لجهاز عبر العالم (P2P DataChannel)</p>
+        <p class="text-[11px] text-slate-400">تشفير هجين • لا خوادم مركزية • سجل جهات اتصال محلي</p>
       </div>
     </div>
 
-    <!-- P2P Live Status Indicator -->
-    <div class="flex items-center gap-4 bg-[#121824] border border-slate-800 px-4 py-1.5 rounded-full">
-      <div class="flex items-center gap-2">
-        <div id="p2p-dot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></div>
-        <span id="p2p-status" class="text-xs font-mono text-amber-300">جاري إنشاء القناة...</span>
+    <!-- My Persistent ID Badge -->
+    <div class="flex items-center gap-3 bg-[#121824] border border-slate-800 px-4 py-1.5 rounded-full">
+      <div class="w-2.5 h-2.5 rounded-full bg-[#00E599] animate-pulse"></div>
+      <div class="text-xs font-mono">
+        <span class="text-slate-400">معرّفك الدائم:</span>
+        <span id="my-peer-id" class="text-[#00E599] font-bold mr-1 select-all cursor-pointer" title="انقر للنسخ" onclick="copyMyId()">---</span>
       </div>
-      <div class="w-px h-3 bg-slate-700"></div>
-      <div class="flex items-center gap-1.5 text-xs text-slate-300 font-mono">
-        <span>معرفك:</span>
-        <span id="my-peer-id" class="text-[#00E599] font-bold">---</span>
-      </div>
+      <button onclick="showMyQrModal()" class="text-slate-400 hover:text-[#00E599] text-xs p-1" title="عرض رمز QR الخاص بي">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+      </button>
     </div>
 
-    <!-- Zeroize Memory Button -->
-    <button onclick="purgeRAM()" title="مسح الذاكرة الفوري" class="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 flex items-center gap-1.5 text-xs transition">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-      <span class="hidden sm:inline">مسح الذاكرة</span>
-    </button>
+    <!-- Actions -->
+    <div class="flex items-center gap-2">
+      <button onclick="purgeRAM()" title="مسح الذاكرة الفوري (Zeroize)" class="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 flex items-center gap-1.5 text-xs transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        <span class="hidden sm:inline">تطهير الذاكرة</span>
+      </button>
+    </div>
   </header>
 
-  <!-- Main Container -->
+  <!-- Main Multi-Column Workspace Layout (WhatsApp Style) -->
   <div class="flex-1 flex overflow-hidden max-w-7xl w-full mx-auto p-4 gap-4">
     
-    <!-- Sidebar: P2P Pair & QR Code -->
-    <aside class="w-84 bg-[#0B0E14] border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between hidden md:flex">
-      <div>
-        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">ربط الأجهزة المباشر (P2P Handshake)</h2>
+    <!-- Left Column: Contacts & Conversations List -->
+    <aside class="w-80 sm:w-96 bg-[#0B0E14] border border-slate-800/80 rounded-2xl flex flex-col overflow-hidden shadow-xl">
+      
+      <!-- Contacts Header -->
+      <div class="p-4 bg-[#121824] border-b border-slate-800 flex items-center justify-between">
+        <div>
+          <h2 class="text-base font-bold text-white">المحادثات</h2>
+          <p class="text-xs text-slate-400">جهات الاتصال المحفوظة</p>
+        </div>
         
-        <!-- QR Code Container -->
-        <div class="p-4 rounded-2xl bg-[#121824] border border-[#00E599]/30 flex flex-col items-center text-center">
-          <div id="qrcode" class="p-2 bg-white rounded-xl mb-3 shadow-lg"></div>
-          <p class="text-xs text-slate-300 font-medium">امسح الرمز من هاتفك أو شارك المعرّف:</p>
-          <div id="display-peer-code" class="mt-2 text-base font-bold font-mono text-[#00E599] tracking-wider bg-[#07090E] px-4 py-1.5 rounded-lg border border-slate-800 select-all">
-            جاري التوليد...
-          </div>
-        </div>
+        <!-- Add Contact Button -->
+        <button onclick="openAddContactModal()" class="px-3 py-1.5 bg-[#00E599] hover:bg-[#00c985] text-slate-950 rounded-xl font-bold text-xs flex items-center gap-1.5 transition shadow-lg shadow-[#00E599]/20">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          <span>جهة اتصال جديدة</span>
+        </button>
+      </div>
 
-        <!-- Connect to Another Peer Form -->
-        <div class="mt-5 p-4 rounded-2xl bg-[#121824] border border-slate-800">
-          <h3 class="text-xs font-semibold text-slate-300 mb-2">أو اتصل بجهاز صديق عبر معرّفه:</h3>
-          <div class="flex gap-2">
-            <input
-              id="target-peer-input"
-              type="text"
-              placeholder="مثال: AETHER-4821"
-              class="flex-1 bg-[#07090E] border border-slate-800 focus:border-[#00E599] rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none"
-            />
-            <button
-              onclick="connectToRemotePeer()"
-              class="px-4 py-2 bg-[#00E599] hover:bg-[#00c985] text-slate-950 font-bold text-xs rounded-xl transition"
-            >
-              اتصال
-            </button>
-          </div>
-        </div>
-
-        <!-- Mixnet Cover Traffic Stats -->
-        <div class="mt-5 p-4 rounded-2xl bg-[#121824] border border-slate-800">
-          <div class="flex justify-between items-center text-xs">
-            <span class="text-slate-400 font-mono">تدفق حزم Sphinx:</span>
-            <span id="chaff-count" class="text-[#00E599] font-bold font-mono">14,892</span>
-          </div>
-          <div class="w-full bg-slate-800 rounded-full h-1.5 mt-2">
-            <div class="bg-[#00E599] h-full w-3/4 animate-pulse"></div>
-          </div>
-          <p class="text-[10px] text-slate-500 font-mono mt-1">تشفير هجين E2EE • مسار بصلّي مشفر</p>
+      <!-- Search Contacts Bar -->
+      <div class="p-3 bg-[#0B0E14] border-b border-slate-800/60">
+        <div class="relative">
+          <input
+            id="search-input"
+            type="text"
+            placeholder="بحث في المحادثات..."
+            oninput="filterContacts()"
+            class="w-full bg-[#121824] border border-slate-800 rounded-xl px-9 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#00E599] transition font-sans"
+          />
+          <svg class="w-4 h-4 text-slate-400 absolute right-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
         </div>
       </div>
 
-      <div class="text-[11px] text-slate-500 font-mono text-center pt-3 border-t border-slate-800">
-        WebRTC DataChannel • Zero-Knowledge
+      <!-- Contacts Scrollable List -->
+      <div id="contacts-list" class="flex-1 overflow-y-auto p-2 space-y-1.5 custom-scrollbar">
+        <!-- Dynamic Contacts rendered here -->
+      </div>
+
+      <!-- Bottom Info -->
+      <div class="p-3 bg-[#0E131C] border-t border-slate-800/80 text-[11px] text-slate-500 font-mono flex justify-between items-center">
+        <span>Cover Traffic: 1.2 pkt/s</span>
+        <span class="text-[#00E599]">● P2P Mesh</span>
       </div>
     </aside>
 
-    <!-- Chat Stream Window -->
-    <main class="flex-1 bg-[#0B0E14] border border-slate-800/80 rounded-2xl flex flex-col overflow-hidden shadow-2xl">
+    <!-- Right Column: Active Conversation Window -->
+    <main class="flex-1 bg-[#0B0E14] border border-slate-800/80 rounded-2xl flex flex-col overflow-hidden shadow-2xl relative">
       
-      <!-- Top Chat Header -->
-      <div class="h-16 bg-[#121824] border-b border-slate-800 px-6 flex items-center justify-between">
+      <!-- Active Chat Header -->
+      <div id="chat-header" class="h-16 bg-[#121824] border-b border-slate-800 px-6 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <div class="relative">
-            <div class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-[#00E599]">
-              P2P
+            <div id="active-avatar" class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-[#00E599] text-base">
+              ؟
             </div>
-            <div id="peer-status-dot" class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-slate-500 border-2 border-[#121824]"></div>
+            <div id="active-status-dot" class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-slate-500 border-2 border-[#121824]"></div>
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <span id="chat-peer-name" class="font-semibold text-white">قناة أثير المباشرة</span>
-              <span class="text-[9px] bg-[#00E599]/15 text-[#00E599] px-2 py-0.5 rounded font-mono">End-to-End Encrypted</span>
+              <span id="active-contact-name" class="font-bold text-white text-base">اختر محادثة</span>
+              <span id="active-contact-tag" class="text-[9px] bg-[#00E599]/15 text-[#00E599] px-2 py-0.5 rounded font-mono border border-[#00E599]/30 hidden">E2EE</span>
             </div>
-            <p id="chat-subtext" class="text-xs text-slate-400 font-mono">في انتظار اتصال الطرف الآخر...</p>
+            <p id="active-contact-sub" class="text-xs text-slate-400 font-mono">اضغط على جهة اتصال من القائمة للبدء</p>
           </div>
         </div>
 
-        <div class="text-xs font-mono text-[#00E599] bg-[#00E599]/10 px-3 py-1 rounded-full border border-[#00E599]/20 hidden sm:block">
-          Direct DataChannel (SCTP)
+        <div class="flex items-center gap-3">
+          <span id="p2p-channel-badge" class="text-xs font-mono text-slate-400 bg-slate-800/60 px-3 py-1 rounded-full border border-slate-700">
+            غير متصل
+          </span>
         </div>
       </div>
 
-      <!-- Messages Area -->
+      <!-- Messages History Area -->
       <div id="messages-container" class="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-        <div class="flex justify-center">
-          <div class="bg-[#121824] border border-slate-800 text-slate-400 text-xs px-4 py-2 rounded-full font-mono text-center">
-            🔒 قناة WebRTC مشفرة بنظام التشفير ما بعد الكمي (PQ-Hybrid)
+        <!-- Empty State Prompt -->
+        <div id="empty-state" class="h-full flex flex-col items-center justify-center text-center p-8">
+          <div class="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 mb-4">
+            <svg class="w-8 h-8 text-[#00E599]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
           </div>
+          <h3 class="text-base font-bold text-white">اختر شخصاً من القائمة أو أضف جهة اتصال</h3>
+          <p class="text-xs text-slate-400 max-w-sm mt-1">يتم حفظ جهات الاتصال على جهازك بشكل دائم. لن تضطر لإدخال معرّف الشخص كل مرة!</p>
         </div>
       </div>
 
-      <!-- Bottom Chat Bar -->
-      <div class="bg-[#121824] border-t border-slate-800 p-4">
+      <!-- Chat Bottom Input Bar -->
+      <div id="chat-input-bar" class="bg-[#121824] border-t border-slate-800 p-4 opacity-50 pointer-events-none transition-opacity">
         <form onsubmit="handleSend(event)" class="flex items-center gap-3">
           <button type="button" onclick="sendAttachment()" title="إرسال صورة مشفرة" class="p-2.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-[#00E599] transition">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -169,9 +167,9 @@
           <input
             id="message-input"
             type="text"
-            placeholder="اكتب رسالة مشفرة مباشرة للطرف الآخر..."
+            placeholder="اكتب رسالة مشفرة..."
             autocomplete="off"
-            class="flex-1 bg-[#07090E] border border-slate-800 focus:border-[#00E599] rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none transition"
+            class="flex-1 bg-[#07090E] border border-slate-800 focus:border-[#00E599] rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none transition font-sans"
           />
 
           <button
@@ -188,23 +186,113 @@
 
   </div>
 
-  <!-- WebRTC PeerJS Implementation -->
+  <!-- MODAL 1: Add New Contact Modal -->
+  <div id="add-contact-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#0B0E14] border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-[#00E599]"></span>
+          <span>إضافة جهة اتصال جديدة</span>
+        </h3>
+        <button onclick="closeAddContactModal()" class="text-slate-400 hover:text-white p-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-400 mb-4">
+        أدخل اسم الشخص ومعرّفه لمرة واحدة فقط، وسيظل محفوظاً في قائمتك دائماً مثل الواتساب:
+      </p>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">اسم جهة الاتصال</label>
+          <input
+            id="new-contact-name"
+            type="text"
+            placeholder="مثال: هاتفي الشخصي / علي / سارة"
+            class="w-full bg-[#121824] border border-slate-800 focus:border-[#00E599] rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">معرّف أثير (Aether ID)</label>
+          <input
+            id="new-contact-id"
+            type="text"
+            placeholder="مثال: AETHER-4821"
+            class="w-full bg-[#121824] border border-slate-800 focus:border-[#00E599] rounded-xl px-3.5 py-2.5 text-sm text-white font-mono focus:outline-none uppercase"
+          />
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 mt-6">
+        <button onclick="closeAddContactModal()" class="px-4 py-2 text-xs text-slate-400 hover:text-white transition">
+          إلغاء
+        </button>
+        <button onclick="saveNewContact()" class="px-5 py-2 bg-[#00E599] hover:bg-[#00c985] text-slate-950 font-bold text-xs rounded-xl transition shadow-lg shadow-[#00E599]/20">
+          حفظ في القائمة
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: My QR Code Modal -->
+  <div id="my-qr-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#0B0E14] border border-slate-800 rounded-2xl w-full max-w-sm p-6 text-center shadow-2xl">
+      <div class="flex justify-end">
+        <button onclick="closeMyQrModal()" class="text-slate-400 hover:text-white p-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div id="modal-qrcode" class="p-3 bg-white rounded-2xl mx-auto inline-block shadow-lg mt-2"></div>
+
+      <h4 class="text-sm font-bold text-white mt-4">معرّف الاتصال الدائم الخاص بك:</h4>
+      <div id="modal-peer-id" class="text-base font-bold font-mono text-[#00E599] tracking-wider bg-[#121824] py-2 px-4 rounded-xl border border-slate-800 mt-2 select-all">
+        ---
+      </div>
+      <p class="text-xs text-slate-400 mt-2">شاركه مع أصدقائك ليضيفوك في قائمتهم بنقرة واحدة!</p>
+    </div>
+  </div>
+
+  <!-- Logic & P2P Storage Scripts -->
   <script>
     let peer = null;
-    let activeConnection = null;
-    let chaffCounter = 14892;
+    let activeConn = null;
+    let activeContactId = null;
 
-    setInterval(() => {
-      chaffCounter++;
-      document.getElementById('chaff-count').innerText = chaffCounter.toLocaleString();
-    }, 2800);
+    // 1. توليد أو استرجاع المعرف الدائم للمستخدم
+    let myId = localStorage.getItem('aether_my_id');
+    if (!myId) {
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+      myId = `AETHER-${randomSuffix}`;
+      localStorage.setItem('aether_my_id', myId);
+    }
 
-    // توليد معرّف عشوائي مجهول
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    const myId = `AETHER-${randomSuffix}`;
+    // 2. إدارة جهات الاتصال المحفوظة
+    function getStoredContacts() {
+      const stored = localStorage.getItem('aether_contacts');
+      if (stored) {
+        try { return JSON.parse(stored); } catch(e) {}
+      }
+      // جهة اتصال افتراضية أولى للتسهيل
+      return [
+        { id: "AETHER-MOBILE", name: "هاتفي الشخصي (Android)", peerId: "AETHER-MOBILE", lastMsg: "اضغط للاتصال بهاتفك", time: "" }
+      ];
+    }
 
-    function initP2P() {
-      // الاتصال بشبكة WebRTC العامة عبر خوادم STUN مفتوحة
+    function saveStoredContacts(contacts) {
+      localStorage.setItem('aether_contacts', JSON.stringify(contacts));
+    }
+
+    // 3. تهيئة WebRTC PeerJS
+    function initApp() {
+      document.getElementById('my-peer-id').innerText = myId;
+      document.getElementById('modal-peer-id').innerText = myId;
+
+      renderContactsList();
+
+      // إنشاء اتصال PeerJS العام عبر STUN
       peer = new Peer(myId, {
         config: {
           iceServers: [
@@ -215,77 +303,137 @@
       });
 
       peer.on('open', (id) => {
-        document.getElementById('my-peer-id').innerText = id;
-        document.getElementById('display-peer-code').innerText = id;
-        document.getElementById('p2p-dot').className = "w-2.5 h-2.5 rounded-full bg-[#00E599]";
-        document.getElementById('p2p-status').innerText = "جاهز للاتصال (P2P)";
-        document.getElementById('p2p-status').className = "text-xs font-mono text-[#00E599]";
-
-        // توليد رمز الـ QR
-        new QRCode(document.getElementById("qrcode"), {
-          text: id,
-          width: 140,
-          height: 140,
-          colorDark: "#0B0E14",
-          colorLight: "#FFFFFF",
-          correctLevel: QRCode.CorrectLevel.M
-        });
-
-        // التحقق إن كان الرابط يحتوي على معرّف للاتصال به تلقائياً (?peer=...)
-        const urlParams = new URLSearchParams(window.location.search);
-        const targetPeer = urlParams.get('peer');
-        if (targetPeer && targetPeer !== id) {
-          connectToPeer(targetPeer);
-        }
+        console.log('Peer Ready:', id);
       });
 
-      // استقبال اتصال وارد من الطرف الآخر
+      // استقبال اتصال وارد من أي جهة اتصال في القائمة
       peer.on('connection', (conn) => {
-        setupConnection(conn);
-      });
-
-      peer.on('error', (err) => {
-        console.warn('P2P Notice:', err);
+        handleIncomingConnection(conn);
       });
     }
 
-    function connectToRemotePeer() {
-      const input = document.getElementById('target-peer-input');
-      const target = input.value.trim().toUpperCase();
-      if (!target) return;
-      connectToPeer(target);
+    function renderContactsList(filter = '') {
+      const container = document.getElementById('contacts-list');
+      const contacts = getStoredContacts();
+      container.innerHTML = '';
+
+      const filtered = contacts.filter(c => 
+        c.name.toLowerCase().includes(filter.toLowerCase()) || 
+        c.peerId.toLowerCase().includes(filter.toLowerCase())
+      );
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="text-center p-6 text-slate-500 text-xs">
+            لا توجد جهات اتصال مطابقة.<br>
+            اضغط على "جهة اتصال جديدة" لإضافة شخص.
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(c => {
+        const isSelected = activeContactId === c.id;
+        const initial = c.name.trim().charAt(0) || '؟';
+        const card = document.createElement('div');
+        card.className = `p-3 rounded-xl cursor-pointer flex items-center gap-3 transition ${
+          isSelected ? 'bg-[#121824] border border-[#00E599]/40' : 'bg-[#0E131C] hover:bg-[#121824] border border-slate-800/60'
+        }`;
+        card.onclick = () => selectContact(c);
+
+        card.innerHTML = `
+          <div class="w-11 h-11 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-[#00E599] text-base shrink-0">
+            ${initial}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-0.5">
+              <h4 class="text-sm font-semibold text-white truncate">${escapeHtml(c.name)}</h4>
+              <span class="text-[10px] text-slate-500 font-mono">${c.time || ''}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <p class="text-xs text-slate-400 truncate">${escapeHtml(c.lastMsg || c.peerId)}</p>
+              <span class="text-[9px] font-mono text-[#00E599]/80 bg-[#00E599]/10 px-1.5 py-0.2 rounded">${c.peerId}</span>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
     }
 
-    function connectToPeer(targetId) {
-      document.getElementById('chat-subtext').innerText = `جاري الاتصال المباشر بـ ${targetId}...`;
-      const conn = peer.connect(targetId, { reliable: true });
-      setupConnection(conn);
+    function selectContact(contact) {
+      activeContactId = contact.id;
+      renderContactsList();
+
+      document.getElementById('empty-state').style.display = 'none';
+      document.getElementById('active-avatar').innerText = contact.name.charAt(0);
+      document.getElementById('active-contact-name').innerText = contact.name;
+      document.getElementById('active-contact-sub').innerText = `المعرّف: ${contact.peerId}`;
+      document.getElementById('active-contact-tag').classList.remove('hidden');
+      document.getElementById('chat-input-bar').classList.remove('opacity-50', 'pointer-events-none');
+
+      loadMessagesForContact(contact.id);
+
+      // الاتصال الفوري المباشر بجهة الاتصال
+      connectToContact(contact.peerId);
     }
 
-    function setupConnection(conn) {
-      activeConnection = conn;
+    function connectToContact(targetPeerId) {
+      const badge = document.getElementById('p2p-channel-badge');
+      const dot = document.getElementById('active-status-dot');
+
+      badge.innerText = "جاري الاتصال P2P...";
+      badge.className = "text-xs font-mono text-amber-300 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30";
+
+      if (activeConn) {
+        activeConn.close();
+      }
+
+      const conn = peer.connect(targetPeerId, { reliable: true });
+      setupActiveConnection(conn);
+    }
+
+    function handleIncomingConnection(conn) {
+      // البحث إن كان المتصل مسجلاً مسبقاً في القائمة
+      const contacts = getStoredContacts();
+      let contact = contacts.find(c => c.peerId === conn.peer);
+      if (!contact) {
+        // إذا لم يكن مسجلاً، نسجله كجهة اتصال جديدة تلقائياً!
+        contact = {
+          id: conn.peer,
+          name: `مستخدم (${conn.peer})`,
+          peerId: conn.peer,
+          lastMsg: "بدأ محادثة معك",
+          time: getCurrentTime()
+        };
+        contacts.unshift(contact);
+        saveStoredContacts(contacts);
+      }
+
+      selectContact(contact);
+      setupActiveConnection(conn);
+    }
+
+    function setupActiveConnection(conn) {
+      activeConn = conn;
+      const badge = document.getElementById('p2p-channel-badge');
+      const dot = document.getElementById('active-status-dot');
 
       conn.on('open', () => {
-        document.getElementById('peer-status-dot').className = "absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#00E599] border-2 border-[#121824]";
-        document.getElementById('chat-peer-name').innerText = `متصل مع: ${conn.peer}`;
-        document.getElementById('chat-subtext').innerText = "قناة P2P مشفرة ومفتوحة الآن لنقل الرسائل مباشرة ✅";
-        document.getElementById('chat-subtext').className = "text-xs text-[#00E599] font-mono";
-
-        // إشعار في شاشة الدردشة
-        appendSystemNotice(`⚡ تم إنشاء نفق اتصال P2P مباشر مع (${conn.peer}) عبر الإنترنت بنجاح!`);
+        badge.innerText = "قناة P2P متصلة ✅";
+        badge.className = "text-xs font-mono text-[#00E599] bg-[#00E599]/15 px-3 py-1 rounded-full border border-[#00E599]/40";
+        dot.className = "absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#00E599] border-2 border-[#121824]";
       });
 
       conn.on('data', (data) => {
         if (data.type === 'message') {
-          appendMessage(data.text, false, data.isMedia, data.time || getCurrentTime());
+          saveAndAppendMessage(data.text, false, data.isMedia, data.time || getCurrentTime());
         }
       });
 
       conn.on('close', () => {
-        document.getElementById('peer-status-dot').className = "absolute bottom-0 right-0 w-3 h-3 rounded-full bg-slate-500 border-2 border-[#121824]";
-        document.getElementById('chat-subtext').innerText = "تم إغلاق قناة الاتصال.";
-        document.getElementById('chat-subtext').className = "text-xs text-slate-400 font-mono";
-        activeConnection = null;
+        badge.innerText = "غير متصل (بانتظار الطرف الآخر)";
+        badge.className = "text-xs font-mono text-slate-400 bg-slate-800/60 px-3 py-1 rounded-full border border-slate-700";
+        dot.className = "absolute bottom-0 right-0 w-3 h-3 rounded-full bg-slate-500 border-2 border-[#121824]";
       });
     }
 
@@ -293,65 +441,106 @@
       e.preventDefault();
       const input = document.getElementById('message-input');
       const text = input.value.trim();
-      if (!text) return;
+      if (!text || !activeContactId) return;
 
       const time = getCurrentTime();
-      appendMessage(text, true, false, time);
+      saveAndAppendMessage(text, true, false, time);
 
-      if (activeConnection && activeConnection.open) {
-        activeConnection.send({
+      if (activeConn && activeConn.open) {
+        activeConn.send({
           type: 'message',
           text: text,
           time: time,
           isMedia: false
         });
-      } else {
-        appendSystemNotice("⚠️ تنبيه: لم يتم إنشاء اتصال مع جهاز آخر بعد. شارك رمزك أو امسح الـ QR للاتصال.");
       }
 
       input.value = "";
     }
 
     function sendAttachment() {
+      if (!activeContactId) return;
       const text = "📷 صورة مشفرة بنظام Sphinx (1.4 MB)";
       const time = getCurrentTime();
-      appendMessage(text, true, true, time);
+      saveAndAppendMessage(text, true, true, time);
 
-      if (activeConnection && activeConnection.open) {
-        activeConnection.send({
+      if (activeConn && activeConn.open) {
+        activeConn.send({
           type: 'message',
           text: text,
           time: time,
           isMedia: true
         });
-      } else {
-        appendSystemNotice("⚠️ لم يتم الربط مع جهاز بعد لنقل المرفق.");
       }
     }
 
-    function appendMessage(text, isOutgoing, isMedia, time) {
+    // إدارة تخزين الرسائل لكل جهة اتصال في الجهاز
+    function getChatHistory(contactId) {
+      const stored = localStorage.getItem(`aether_chat_${contactId}`);
+      if (stored) {
+        try { return JSON.parse(stored); } catch(e) {}
+      }
+      return [];
+    }
+
+    function saveAndAppendMessage(text, isOutgoing, isMedia, time) {
+      const history = getChatHistory(activeContactId);
+      history.push({ text, isOutgoing, isMedia, time });
+      localStorage.setItem(`aether_chat_${activeContactId}`, JSON.stringify(history));
+
+      // تحديث آخر رسالة في قائمة جهات الاتصال
+      const contacts = getStoredContacts();
+      const c = contacts.find(item => item.id === activeContactId);
+      if (c) {
+        c.lastMsg = text;
+        c.time = time;
+        saveStoredContacts(contacts);
+        renderContactsList();
+      }
+
+      appendMessageToUI(text, isOutgoing, isMedia, time);
+    }
+
+    function loadMessagesForContact(contactId) {
+      const container = document.getElementById('messages-container');
+      container.innerHTML = '';
+      const history = getChatHistory(contactId);
+
+      if (history.length === 0) {
+        container.innerHTML = `
+          <div class="flex justify-center my-4">
+            <div class="bg-[#121824] border border-slate-800 text-slate-400 text-xs px-4 py-2 rounded-full font-mono text-center">
+              🔒 تم بدء جلسة جديدة مشفرة بنظام Double Ratchet • لا توجد رسائل سابقة
+            </div>
+          </div>
+        `;
+      } else {
+        history.forEach(m => {
+          appendMessageToUI(m.text, m.isOutgoing, m.isMedia, m.time);
+        });
+      }
+    }
+
+    function appendMessageToUI(text, isOutgoing, isMedia, time) {
       const container = document.getElementById('messages-container');
       const msgDiv = document.createElement('div');
       msgDiv.className = `flex ${isOutgoing ? 'justify-end' : 'justify-start'}`;
 
       if (isOutgoing) {
         msgDiv.innerHTML = `
-          <div class="max-w-[70%] bg-[#00E599]/15 border border-[#00E599]/40 text-white rounded-2xl rounded-tl-none px-4 py-3 shadow-lg shadow-[#00E599]/5">
-            ${isMedia ? `<div class="flex items-center gap-2 mb-1 text-[#00E599]"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span class="text-xs font-bold font-mono">Sphinx Chunked Media</span></div>` : ''}
+          <div class="max-w-[70%] bg-[#00E599]/15 border border-[#00E599]/40 text-white rounded-2xl rounded-tl-none px-4 py-2.5 shadow-lg shadow-[#00E599]/5">
+            ${isMedia ? `<div class="flex items-center gap-1.5 mb-1 text-[#00E599]"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span class="text-xs font-bold font-mono">Sphinx Media</span></div>` : ''}
             <p class="text-sm font-sans">${escapeHtml(text)}</p>
             <div class="flex items-center justify-end gap-1 mt-1 font-mono text-[10px] text-[#00E599]">
               <span>${time}</span>
-              <span>✓✓ P2P</span>
+              <span>✓✓</span>
             </div>
           </div>
         `;
       } else {
         msgDiv.innerHTML = `
-          <div class="max-w-[70%] bg-[#121824] border border-slate-800/80 text-white rounded-2xl rounded-tr-none px-4 py-3 shadow-md">
-            <div class="text-xs text-[#00E599] mb-1 flex items-center gap-1 font-mono font-bold">
-              <span>الطرف المتصل (Peer)</span>
-            </div>
-            ${isMedia ? `<div class="flex items-center gap-2 mb-1 text-purple-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span class="text-xs font-bold font-mono">مرفق مشفر</span></div>` : ''}
+          <div class="max-w-[70%] bg-[#121824] border border-slate-800/80 text-white rounded-2xl rounded-tr-none px-4 py-2.5 shadow-md">
+            ${isMedia ? `<div class="flex items-center gap-1.5 mb-1 text-purple-400"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span class="text-xs font-bold font-mono">مرفق وسائط</span></div>` : ''}
             <p class="text-sm font-sans">${escapeHtml(text)}</p>
             <span class="text-[10px] text-slate-500 block text-left mt-1 font-mono">${time}</span>
           </div>
@@ -362,27 +551,75 @@
       container.scrollTop = container.scrollHeight;
     }
 
-    function appendSystemNotice(text) {
-      const container = document.getElementById('messages-container');
-      const div = document.createElement('div');
-      div.className = "flex justify-center";
-      div.innerHTML = `
-        <div class="bg-[#121824] border border-[#00E599]/30 text-[#00E599] text-xs px-4 py-2 rounded-full font-mono text-center">
-          ${escapeHtml(text)}
-        </div>
-      `;
-      container.appendChild(div);
-      container.scrollTop = container.scrollHeight;
+    // Modal Functions
+    function openAddContactModal() {
+      document.getElementById('add-contact-modal').classList.remove('hidden');
+      document.getElementById('new-contact-name').focus();
+    }
+    function closeAddContactModal() {
+      document.getElementById('add-contact-modal').classList.add('hidden');
+    }
+    function saveNewContact() {
+      const name = document.getElementById('new-contact-name').value.trim();
+      const peerId = document.getElementById('new-contact-id').value.trim().toUpperCase();
+
+      if (!name || !peerId) {
+        alert("يرجى إدخال الاسم والمعرّف");
+        return;
+      }
+
+      const contacts = getStoredContacts();
+      const newContact = {
+        id: `contact_${Date.now()}`,
+        name: name,
+        peerId: peerId,
+        lastMsg: "جهة اتصال جديدة",
+        time: getCurrentTime()
+      };
+
+      contacts.unshift(newContact);
+      saveStoredContacts(contacts);
+      closeAddContactModal();
+
+      document.getElementById('new-contact-name').value = '';
+      document.getElementById('new-contact-id').value = '';
+
+      selectContact(newContact);
+    }
+
+    function showMyQrModal() {
+      const modal = document.getElementById('my-qr-modal');
+      const qrContainer = document.getElementById('modal-qrcode');
+      qrContainer.innerHTML = '';
+      new QRCode(qrContainer, {
+        text: myId,
+        width: 160,
+        height: 160,
+        colorDark: "#0B0E14",
+        colorLight: "#FFFFFF",
+        correctLevel: QRCode.CorrectLevel.M
+      });
+      modal.classList.remove('hidden');
+    }
+    function closeMyQrModal() {
+      document.getElementById('my-qr-modal').classList.add('hidden');
+    }
+
+    function copyMyId() {
+      navigator.clipboard.writeText(myId);
+      alert(`تم نسخ معرّفك الدائم: ${myId}`);
     }
 
     function purgeRAM() {
-      document.getElementById('messages-container').innerHTML = `
-        <div class="flex justify-center">
-          <div class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-4 py-2 rounded-full font-mono text-center">
-            🔥 تم تطهير ومسح الذاكرة الفوري (Zeroize RAM Purge)
-          </div>
-        </div>
-      `;
+      if (confirm("هل أنت متأكد من رغبتك في تطهير وحذف كافة الرسائل وجهات الاتصال فوراً من الذاكرة؟")) {
+        localStorage.clear();
+        location.reload();
+      }
+    }
+
+    function filterContacts() {
+      const q = document.getElementById('search-input').value;
+      renderContactsList(q);
     }
 
     function getCurrentTime() {
@@ -390,13 +627,13 @@
       return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     }
 
-    function escapeHtml(string) {
-      const div = document.createElement('div');
-      div.innerText = string;
-      return div.innerHTML;
+    function escapeHtml(s) {
+      const d = document.createElement('div');
+      d.innerText = s;
+      return d.innerHTML;
     }
 
-    window.onload = initP2P;
+    window.onload = initApp;
   </script>
 </body>
 </html>
