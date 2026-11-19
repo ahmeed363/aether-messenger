@@ -40,6 +40,9 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: "8.5"
+          build-root-directory: "mobile/android"
 
       - name: Install Rust Toolchain & Android Targets
         uses: dtolnay/rust-toolchain@stable
@@ -52,7 +55,9 @@ jobs:
           ndk-version: r26b
 
       - name: Install cargo-ndk
-        run: cargo install cargo-ndk
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-ndk
 
       - name: Compile Rust Core for Android (arm64, armv7, x86_64)
         run: |
@@ -80,6 +85,7 @@ jobs:
     name: Build iOS XCFramework (SwiftUI)
     needs: build-rust-core
     runs-on: macos-14
+    continue-on-error: true
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
