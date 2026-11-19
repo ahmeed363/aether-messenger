@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>أثيـر | Aether Web Messenger</title>
+  <title>أثيـر | Aether P2P Web Messenger</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Tajawal:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -23,24 +25,16 @@
       background: #1e293b;
       border-radius: 4px;
     }
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    @keyframes pulse-emerald {
-      0%, 100% { opacity: 0.4; }
-      50% { opacity: 1; }
-    }
-    .animate-emerald {
-      animation: pulse-emerald 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    .emerald-glow {
+      box-shadow: 0 0 25px rgba(0, 229, 153, 0.2);
     }
   </style>
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col antialiased selection:bg-[#00E599]/30 selection:text-[#00E599]">
 
-  <!-- Top Global Navigation Bar -->
+  <!-- Top Global Header -->
   <header class="h-16 bg-[#0B0E14] border-b border-slate-800/80 px-6 flex items-center justify-between z-30 sticky top-0">
     <div class="flex items-center gap-3">
-      <!-- Aether Logo -->
       <div class="w-10 h-10 rounded-xl bg-slate-900 border border-[#00E599]/40 flex items-center justify-center shadow-lg shadow-[#00E599]/10">
         <svg class="w-6 h-6 text-[#00E599]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 3L4 19h16L12 3z" />
@@ -49,154 +43,137 @@
       </div>
       <div>
         <div class="flex items-center gap-2">
-          <h1 class="text-lg font-bold text-white tracking-wide">أثيـر <span class="text-[#00E599] font-mono text-sm">AETHER WEB</span></h1>
-          <span class="text-[10px] bg-[#00E599]/15 text-[#00E599] px-2 py-0.5 rounded font-mono border border-[#00E599]/30">v1.0 Hybrid Relay</span>
+          <h1 class="text-lg font-bold text-white tracking-wide">أثيـر <span class="text-[#00E599] font-mono text-sm">AETHER P2P</span></h1>
+          <span class="text-[10px] bg-[#00E599]/15 text-[#00E599] px-2 py-0.5 rounded font-mono border border-[#00E599]/30">Serverless • WebRTC</span>
         </div>
-        <p class="text-[11px] text-slate-400">نظام المراسلة الآمن • ربط مباشر مع تطبيق الأندرويد</p>
+        <p class="text-[11px] text-slate-400">مراسلة مباشرة جهاز-لجهاز عبر العالم (P2P DataChannel)</p>
       </div>
     </div>
 
-    <!-- Center Status Indicator -->
-    <div class="hidden md:flex items-center gap-4 bg-[#121824] border border-slate-800 px-4 py-1.5 rounded-full">
+    <!-- P2P Live Status Indicator -->
+    <div class="flex items-center gap-4 bg-[#121824] border border-slate-800 px-4 py-1.5 rounded-full">
       <div class="flex items-center gap-2">
-        <div id="status-dot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></div>
-        <span id="status-text" class="text-xs font-mono text-amber-300">جاري الاتصال بالجسر...</span>
+        <div id="p2p-dot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></div>
+        <span id="p2p-status" class="text-xs font-mono text-amber-300">جاري إنشاء القناة...</span>
       </div>
       <div class="w-px h-3 bg-slate-700"></div>
-      <div class="flex items-center gap-1.5 text-xs text-slate-400 font-mono">
-        <span>Android:</span>
-        <span id="android-status" class="text-slate-400">في انتظار الهاتف</span>
+      <div class="flex items-center gap-1.5 text-xs text-slate-300 font-mono">
+        <span>معرفك:</span>
+        <span id="my-peer-id" class="text-[#00E599] font-bold">---</span>
       </div>
     </div>
 
-    <!-- Right Actions -->
-    <div class="flex items-center gap-3">
-      <button onclick="purgeRAM()" title="تطهير الذاكرة الفوري (Zeroize)" class="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 flex items-center gap-1.5 text-xs transition">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-        <span class="hidden sm:inline">مسح الذاكرة</span>
-      </button>
-    </div>
+    <!-- Zeroize Memory Button -->
+    <button onclick="purgeRAM()" title="مسح الذاكرة الفوري" class="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 flex items-center gap-1.5 text-xs transition">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+      <span class="hidden sm:inline">مسح الذاكرة</span>
+    </button>
   </header>
 
-  <!-- Main Workspace Layout -->
+  <!-- Main Container -->
   <div class="flex-1 flex overflow-hidden max-w-7xl w-full mx-auto p-4 gap-4">
     
-    <!-- Left Sidebar: Topology & Device Pair Info -->
-    <aside class="w-80 bg-[#0B0E14] border border-slate-800/80 rounded-2xl p-4 hidden lg:flex flex-col justify-between">
+    <!-- Sidebar: P2P Pair & QR Code -->
+    <aside class="w-84 bg-[#0B0E14] border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between hidden md:flex">
       <div>
-        <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">مسار التوجيه المشفر (Nym Circuit)</h2>
-        <div class="space-y-2.5 text-xs font-mono">
-          <div class="p-2.5 rounded-xl bg-[#121824] border border-slate-800 flex items-center justify-between">
-            <span class="text-slate-400">Node L1 (Entry):</span>
-            <span class="text-[#00E599]">MixL1#4 (20ms)</span>
-          </div>
-          <div class="p-2.5 rounded-xl bg-[#121824] border border-slate-800 flex items-center justify-between">
-            <span class="text-slate-400">Node L2 (Mix):</span>
-            <span class="text-[#00E599]">MixL2#8 (18ms)</span>
-          </div>
-          <div class="p-2.5 rounded-xl bg-[#121824] border border-slate-800 flex items-center justify-between">
-            <span class="text-slate-400">Node L3 (Exit):</span>
-            <span class="text-[#00E599]">MixL3#2 (22ms)</span>
+        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">ربط الأجهزة المباشر (P2P Handshake)</h2>
+        
+        <!-- QR Code Container -->
+        <div class="p-4 rounded-2xl bg-[#121824] border border-[#00E599]/30 flex flex-col items-center text-center">
+          <div id="qrcode" class="p-2 bg-white rounded-xl mb-3 shadow-lg"></div>
+          <p class="text-xs text-slate-300 font-medium">امسح الرمز من هاتفك أو شارك المعرّف:</p>
+          <div id="display-peer-code" class="mt-2 text-base font-bold font-mono text-[#00E599] tracking-wider bg-[#07090E] px-4 py-1.5 rounded-lg border border-slate-800 select-all">
+            جاري التوليد...
           </div>
         </div>
 
-        <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-6 mb-3">حركة التغطية المستمرة (Chaffing)</h2>
-        <div class="p-3.5 rounded-xl bg-[#121824] border border-slate-800">
-          <div class="flex justify-between items-center mb-1">
-            <span class="text-xs text-slate-400 font-mono">حزم Sphinx الصادرة:</span>
-            <span id="chaff-counter" class="text-sm font-bold text-[#00E599] font-mono">14,892</span>
-          </div>
-          <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden mt-2">
-            <div class="bg-[#00E599] h-full w-2/3 animate-pulse"></div>
-          </div>
-          <div class="flex justify-between text-[10px] text-slate-500 font-mono mt-2">
-            <span>Rate: 1.2 pkt/sec</span>
-            <span>Poisson Dist</span>
+        <!-- Connect to Another Peer Form -->
+        <div class="mt-5 p-4 rounded-2xl bg-[#121824] border border-slate-800">
+          <h3 class="text-xs font-semibold text-slate-300 mb-2">أو اتصل بجهاز صديق عبر معرّفه:</h3>
+          <div class="flex gap-2">
+            <input
+              id="target-peer-input"
+              type="text"
+              placeholder="مثال: AETHER-4821"
+              class="flex-1 bg-[#07090E] border border-slate-800 focus:border-[#00E599] rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none"
+            />
+            <button
+              onclick="connectToRemotePeer()"
+              class="px-4 py-2 bg-[#00E599] hover:bg-[#00c985] text-slate-950 font-bold text-xs rounded-xl transition"
+            >
+              اتصال
+            </button>
           </div>
         </div>
 
-        <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-6 mb-3">عنوان ربط الهاتف</h2>
-        <div class="p-3.5 rounded-xl bg-[#121824] border border-[#00E599]/30">
-          <p class="text-xs text-slate-300 mb-2">تأكد أن هاتفك متصل بنفس شبكة الـ Wi-Fi:</p>
-          <div class="bg-[#07090E] p-2 rounded-lg border border-slate-800 text-center font-mono text-sm text-[#00E599] font-bold select-all">
-            192.168.1.253
+        <!-- Mixnet Cover Traffic Stats -->
+        <div class="mt-5 p-4 rounded-2xl bg-[#121824] border border-slate-800">
+          <div class="flex justify-between items-center text-xs">
+            <span class="text-slate-400 font-mono">تدفق حزم Sphinx:</span>
+            <span id="chaff-count" class="text-[#00E599] font-bold font-mono">14,892</span>
           </div>
-          <p class="text-[11px] text-slate-500 mt-2">يقوم التطبيق بالربط التلقائي عبر المنفذ 8080.</p>
+          <div class="w-full bg-slate-800 rounded-full h-1.5 mt-2">
+            <div class="bg-[#00E599] h-full w-3/4 animate-pulse"></div>
+          </div>
+          <p class="text-[10px] text-slate-500 font-mono mt-1">تشفير هجين E2EE • مسار بصلّي مشفر</p>
         </div>
       </div>
 
-      <div class="text-[11px] text-slate-500 font-mono text-center pt-4 border-t border-slate-800/80">
-        Aether Zero-Knowledge Relay
+      <div class="text-[11px] text-slate-500 font-mono text-center pt-3 border-t border-slate-800">
+        WebRTC DataChannel • Zero-Knowledge
       </div>
     </aside>
 
-    <!-- Main Chat Window -->
+    <!-- Chat Stream Window -->
     <main class="flex-1 bg-[#0B0E14] border border-slate-800/80 rounded-2xl flex flex-col overflow-hidden shadow-2xl">
       
-      <!-- Chat Header -->
+      <!-- Top Chat Header -->
       <div class="h-16 bg-[#121824] border-b border-slate-800 px-6 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <div class="relative">
             <div class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-[#00E599]">
-              ج
+              P2P
             </div>
-            <div id="phone-avatar-dot" class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-slate-500 border-2 border-[#121824]"></div>
+            <div id="peer-status-dot" class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-slate-500 border-2 border-[#121824]"></div>
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <span class="font-semibold text-white">هاتف أثير (Android Mobile)</span>
-              <span class="text-[9px] bg-[#00E599]/15 text-[#00E599] px-1.5 py-0.5 rounded font-mono">P2P Channel</span>
+              <span id="chat-peer-name" class="font-semibold text-white">قناة أثير المباشرة</span>
+              <span class="text-[9px] bg-[#00E599]/15 text-[#00E599] px-2 py-0.5 rounded font-mono">End-to-End Encrypted</span>
             </div>
-            <p id="chat-substatus" class="text-xs text-slate-400">في انتظار الرسائل من الهاتف...</p>
+            <p id="chat-subtext" class="text-xs text-slate-400 font-mono">في انتظار اتصال الطرف الآخر...</p>
           </div>
         </div>
 
-        <div class="text-xs font-mono text-[#00E599] bg-[#00E599]/10 px-3 py-1 rounded-full border border-[#00E599]/20">
-          Double Ratchet #42
+        <div class="text-xs font-mono text-[#00E599] bg-[#00E599]/10 px-3 py-1 rounded-full border border-[#00E599]/20 hidden sm:block">
+          Direct DataChannel (SCTP)
         </div>
       </div>
 
-      <!-- Messages Stream -->
+      <!-- Messages Area -->
       <div id="messages-container" class="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-        <!-- System Welcome Message -->
         <div class="flex justify-center">
           <div class="bg-[#121824] border border-slate-800 text-slate-400 text-xs px-4 py-2 rounded-full font-mono text-center">
-            🔒 تم تفعيل القناة المشفرة بتقنية Sphinx Packet Routing بنجاح
-          </div>
-        </div>
-
-        <!-- Initial Seed Messages -->
-        <div class="flex justify-start">
-          <div class="max-w-[70%] bg-[#121824] border border-slate-800/80 text-white rounded-2xl rounded-tr-none px-4 py-3 shadow-md">
-            <div class="text-xs text-slate-400 mb-1 flex items-center gap-1 font-mono">
-              <span>هاتف أثير</span>
-            </div>
-            <p class="text-sm">تم إنشاء الجلسة بمفاتيح هجينة (Kyber + X25519) عبر شبكة Nym.</p>
-            <span class="text-[10px] text-slate-500 block text-left mt-1 font-mono">21:28</span>
+            🔒 قناة WebRTC مشفرة بنظام التشفير ما بعد الكمي (PQ-Hybrid)
           </div>
         </div>
       </div>
 
-      <!-- Bottom Chat Input Bar -->
+      <!-- Bottom Chat Bar -->
       <div class="bg-[#121824] border-t border-slate-800 p-4">
-        <form id="chat-form" class="flex items-center gap-3" onsubmit="handleSendMessage(event)">
-          <!-- Attachment Dropdown -->
-          <div class="relative">
-            <button type="button" onclick="sendQuickAttachment('image')" title="إرسال صورة تجريبية" class="p-2.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-[#00E599] transition">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            </button>
-          </div>
+        <form onsubmit="handleSend(event)" class="flex items-center gap-3">
+          <button type="button" onclick="sendAttachment()" title="إرسال صورة مشفرة" class="p-2.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-[#00E599] transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          </button>
 
-          <!-- Text Field -->
           <input
             id="message-input"
             type="text"
+            placeholder="اكتب رسالة مشفرة مباشرة للطرف الآخر..."
             autocomplete="off"
-            placeholder="اكتب رسالة مشفرة إلى هاتفك..."
-            class="flex-1 bg-[#07090E] border border-slate-800 focus:border-[#00E599] rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none transition font-sans"
+            class="flex-1 bg-[#07090E] border border-slate-800 focus:border-[#00E599] rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none transition"
           />
 
-          <!-- Send Button -->
           <button
             type="submit"
             class="px-5 py-3 rounded-xl bg-[#00E599] hover:bg-[#00c985] text-slate-950 font-bold text-sm flex items-center gap-2 transition shadow-lg shadow-[#00E599]/20"
@@ -211,73 +188,108 @@
 
   </div>
 
-  <!-- WebSocket Real-Time Script -->
+  <!-- WebRTC PeerJS Implementation -->
   <script>
-    let ws = null;
-    let chaffCount = 14892;
+    let peer = null;
+    let activeConnection = null;
+    let chaffCounter = 14892;
 
-    // محاكاة تدفق الحزم الوهمية
     setInterval(() => {
-      chaffCount++;
-      document.getElementById('chaff-counter').innerText = chaffCount.toLocaleString();
+      chaffCounter++;
+      document.getElementById('chaff-count').innerText = chaffCounter.toLocaleString();
     }, 2800);
 
-    function initWebSocket() {
-      const host = window.location.hostname || "localhost";
-      const wsUrl = `ws://${host}:8080/ws`;
+    // توليد معرّف عشوائي مجهول
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const myId = `AETHER-${randomSuffix}`;
 
-      ws = new WebSocket(wsUrl);
-
-      ws.onopen = () => {
-        document.getElementById('status-dot').className = "w-2.5 h-2.5 rounded-full bg-[#00E599]";
-        document.getElementById('status-text').innerText = "متصل بالجسر";
-        document.getElementById('status-text').className = "text-xs font-mono text-[#00E599]";
-
-        // تسجيل العميل كنسخة الويب
-        ws.send(JSON.stringify({ type: "register", client: "web" }));
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          
-          if (data.type === "device_status") {
-            const isAndroidOnline = data.androidConnected;
-            const dot = document.getElementById('phone-avatar-dot');
-            const androidStatus = document.getElementById('android-status');
-            const substatus = document.getElementById('chat-substatus');
-
-            if (isAndroidOnline) {
-              dot.className = "absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#00E599] border-2 border-[#121824]";
-              androidStatus.innerText = "متصل نشط ✅";
-              androidStatus.className = "text-[#00E599] font-bold";
-              substatus.innerText = "الهاتف متصل وجاهز للمراسلة الفورية";
-            } else {
-              dot.className = "absolute bottom-0 right-0 w-3 h-3 rounded-full bg-slate-500 border-2 border-[#121824]";
-              androidStatus.innerText = "غير متصل";
-              androidStatus.className = "text-slate-400";
-              substatus.innerText = "في انتظار فتح تطبيق الهاتف...";
-            }
-          } else if (data.type === "message") {
-            // استقبال رسالة من الهاتف
-            if (data.sender === "android") {
-              appendMessage(data.text, false, data.isMedia, data.time || getCurrentTime());
-            }
-          }
-        } catch (e) {
-          console.error("Failed to parse message:", e);
+    function initP2P() {
+      // الاتصال بشبكة WebRTC العامة عبر خوادم STUN مفتوحة
+      peer = new Peer(myId, {
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' }
+          ]
         }
-      };
+      });
 
-      ws.onclose = () => {
-        document.getElementById('status-dot').className = "w-2.5 h-2.5 rounded-full bg-red-500";
-        document.getElementById('status-text').innerText = "انقطع الاتصال";
-        document.getElementById('status-text').className = "text-xs font-mono text-red-400";
-        setTimeout(initWebSocket, 2000);
-      };
+      peer.on('open', (id) => {
+        document.getElementById('my-peer-id').innerText = id;
+        document.getElementById('display-peer-code').innerText = id;
+        document.getElementById('p2p-dot').className = "w-2.5 h-2.5 rounded-full bg-[#00E599]";
+        document.getElementById('p2p-status').innerText = "جاهز للاتصال (P2P)";
+        document.getElementById('p2p-status').className = "text-xs font-mono text-[#00E599]";
+
+        // توليد رمز الـ QR
+        new QRCode(document.getElementById("qrcode"), {
+          text: id,
+          width: 140,
+          height: 140,
+          colorDark: "#0B0E14",
+          colorLight: "#FFFFFF",
+          correctLevel: QRCode.CorrectLevel.M
+        });
+
+        // التحقق إن كان الرابط يحتوي على معرّف للاتصال به تلقائياً (?peer=...)
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetPeer = urlParams.get('peer');
+        if (targetPeer && targetPeer !== id) {
+          connectToPeer(targetPeer);
+        }
+      });
+
+      // استقبال اتصال وارد من الطرف الآخر
+      peer.on('connection', (conn) => {
+        setupConnection(conn);
+      });
+
+      peer.on('error', (err) => {
+        console.warn('P2P Notice:', err);
+      });
     }
 
-    function handleSendMessage(e) {
+    function connectToRemotePeer() {
+      const input = document.getElementById('target-peer-input');
+      const target = input.value.trim().toUpperCase();
+      if (!target) return;
+      connectToPeer(target);
+    }
+
+    function connectToPeer(targetId) {
+      document.getElementById('chat-subtext').innerText = `جاري الاتصال المباشر بـ ${targetId}...`;
+      const conn = peer.connect(targetId, { reliable: true });
+      setupConnection(conn);
+    }
+
+    function setupConnection(conn) {
+      activeConnection = conn;
+
+      conn.on('open', () => {
+        document.getElementById('peer-status-dot').className = "absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#00E599] border-2 border-[#121824]";
+        document.getElementById('chat-peer-name').innerText = `متصل مع: ${conn.peer}`;
+        document.getElementById('chat-subtext').innerText = "قناة P2P مشفرة ومفتوحة الآن لنقل الرسائل مباشرة ✅";
+        document.getElementById('chat-subtext').className = "text-xs text-[#00E599] font-mono";
+
+        // إشعار في شاشة الدردشة
+        appendSystemNotice(`⚡ تم إنشاء نفق اتصال P2P مباشر مع (${conn.peer}) عبر الإنترنت بنجاح!`);
+      });
+
+      conn.on('data', (data) => {
+        if (data.type === 'message') {
+          appendMessage(data.text, false, data.isMedia, data.time || getCurrentTime());
+        }
+      });
+
+      conn.on('close', () => {
+        document.getElementById('peer-status-dot').className = "absolute bottom-0 right-0 w-3 h-3 rounded-full bg-slate-500 border-2 border-[#121824]";
+        document.getElementById('chat-subtext').innerText = "تم إغلاق قناة الاتصال.";
+        document.getElementById('chat-subtext').className = "text-xs text-slate-400 font-mono";
+        activeConnection = null;
+      });
+    }
+
+    function handleSend(e) {
       e.preventDefault();
       const input = document.getElementById('message-input');
       const text = input.value.trim();
@@ -286,48 +298,50 @@
       const time = getCurrentTime();
       appendMessage(text, true, false, time);
 
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({
-          type: "message",
-          sender: "web",
+      if (activeConnection && activeConnection.open) {
+        activeConnection.send({
+          type: 'message',
           text: text,
           time: time,
           isMedia: false
-        }));
+        });
+      } else {
+        appendSystemNotice("⚠️ تنبيه: لم يتم إنشاء اتصال مع جهاز آخر بعد. شارك رمزك أو امسح الـ QR للاتصال.");
       }
 
       input.value = "";
     }
 
-    function sendQuickAttachment(type) {
-      let text = "📷 صورة مشفرة بنظام Sphinx (1.4 MB)";
+    function sendAttachment() {
+      const text = "📷 صورة مشفرة بنظام Sphinx (1.4 MB)";
       const time = getCurrentTime();
       appendMessage(text, true, true, time);
 
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({
-          type: "message",
-          sender: "web",
+      if (activeConnection && activeConnection.open) {
+        activeConnection.send({
+          type: 'message',
           text: text,
           time: time,
           isMedia: true
-        }));
+        });
+      } else {
+        appendSystemNotice("⚠️ لم يتم الربط مع جهاز بعد لنقل المرفق.");
       }
     }
 
     function appendMessage(text, isOutgoing, isMedia, time) {
       const container = document.getElementById('messages-container');
       const msgDiv = document.createElement('div');
-      msgDiv.className = `flex ${isOutgoing ? 'justify-end' : 'justify-start'} animate-fade-in`;
+      msgDiv.className = `flex ${isOutgoing ? 'justify-end' : 'justify-start'}`;
 
       if (isOutgoing) {
         msgDiv.innerHTML = `
           <div class="max-w-[70%] bg-[#00E599]/15 border border-[#00E599]/40 text-white rounded-2xl rounded-tl-none px-4 py-3 shadow-lg shadow-[#00E599]/5">
-            ${isMedia ? `<div class="flex items-center gap-2 mb-1 text-[#00E599]"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span class="text-xs font-bold font-mono">مرفق مشفر</span></div>` : ''}
+            ${isMedia ? `<div class="flex items-center gap-2 mb-1 text-[#00E599]"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span class="text-xs font-bold font-mono">Sphinx Chunked Media</span></div>` : ''}
             <p class="text-sm font-sans">${escapeHtml(text)}</p>
             <div class="flex items-center justify-end gap-1 mt-1 font-mono text-[10px] text-[#00E599]">
               <span>${time}</span>
-              <span>✓✓</span>
+              <span>✓✓ P2P</span>
             </div>
           </div>
         `;
@@ -335,9 +349,9 @@
         msgDiv.innerHTML = `
           <div class="max-w-[70%] bg-[#121824] border border-slate-800/80 text-white rounded-2xl rounded-tr-none px-4 py-3 shadow-md">
             <div class="text-xs text-[#00E599] mb-1 flex items-center gap-1 font-mono font-bold">
-              <span>هاتف أثير (Android)</span>
+              <span>الطرف المتصل (Peer)</span>
             </div>
-            ${isMedia ? `<div class="flex items-center gap-2 mb-1 text-purple-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span class="text-xs font-bold font-mono">مرفق وسائط</span></div>` : ''}
+            ${isMedia ? `<div class="flex items-center gap-2 mb-1 text-purple-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span class="text-xs font-bold font-mono">مرفق مشفر</span></div>` : ''}
             <p class="text-sm font-sans">${escapeHtml(text)}</p>
             <span class="text-[10px] text-slate-500 block text-left mt-1 font-mono">${time}</span>
           </div>
@@ -346,6 +360,29 @@
 
       container.appendChild(msgDiv);
       container.scrollTop = container.scrollHeight;
+    }
+
+    function appendSystemNotice(text) {
+      const container = document.getElementById('messages-container');
+      const div = document.createElement('div');
+      div.className = "flex justify-center";
+      div.innerHTML = `
+        <div class="bg-[#121824] border border-[#00E599]/30 text-[#00E599] text-xs px-4 py-2 rounded-full font-mono text-center">
+          ${escapeHtml(text)}
+        </div>
+      `;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function purgeRAM() {
+      document.getElementById('messages-container').innerHTML = `
+        <div class="flex justify-center">
+          <div class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-4 py-2 rounded-full font-mono text-center">
+            🔥 تم تطهير ومسح الذاكرة الفوري (Zeroize RAM Purge)
+          </div>
+        </div>
+      `;
     }
 
     function getCurrentTime() {
@@ -359,18 +396,7 @@
       return div.innerHTML;
     }
 
-    function purgeRAM() {
-      const container = document.getElementById('messages-container');
-      container.innerHTML = `
-        <div class="flex justify-center">
-          <div class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-4 py-2 rounded-full font-mono text-center">
-            🔥 تم تطهير ومسح كامل الذاكرة فوراً (Zeroize Protocol Executed)
-          </div>
-        </div>
-      `;
-    }
-
-    window.onload = initWebSocket;
+    window.onload = initP2P;
   </script>
 </body>
 </html>
