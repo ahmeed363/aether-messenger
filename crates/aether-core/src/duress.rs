@@ -2,8 +2,6 @@
 //! نظام بصمة الطوارئ والمخزن المموّه (Duress Fingerprint & Decoy Vault).
 //! يتيح للمستخدم الإنكار المعقول الكامل (Plausible Deniability) في حال أُجبر قسراً على فتح التطبيق.
 
-use zeroize::{Zeroize, ZeroizeOnDrop};
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum VaultMode {
     /// الوضع الحقيقي: فك تشفير الجلسات والمفاتيح الفعلية في الذاكرة
@@ -19,14 +17,14 @@ pub struct DecoyMessage {
 }
 
 pub struct DuressManager {
-    primary_finger_id: [u8; 16],
+    _primary_finger_id: [u8; 16],
     duress_finger_id: [u8; 16],
 }
 
 impl DuressManager {
     pub fn new(primary_id: [u8; 16], duress_id: [u8; 16]) -> Self {
         Self {
-            primary_finger_id: primary_id,
+            _primary_finger_id: primary_id,
             duress_finger_id: duress_id,
         }
     }

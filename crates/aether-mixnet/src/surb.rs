@@ -2,7 +2,7 @@
 //! كتل الرد لمرة واحدة (Single-Use Reply Blocks - SURBs).
 //! تتيح للمستلم الرد على الرسالة دون معرفة عنوان أو هوية أو موقع المرسل الأصلي.
 
-use crate::sphinx::{SphinxHeader, SPHINX_PAYLOAD_SIZE};
+use crate::sphinx::SphinxHeader;
 
 #[derive(Clone, Debug)]
 pub struct SURB {

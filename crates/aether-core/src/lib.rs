@@ -10,7 +10,6 @@ pub use aether_chaff as chaff;
 
 use mixnet::{AetherMixnetClient, NetworkTopology};
 use chaff::ChaffEngine;
-use tokio::sync::mpsc;
 use tracing::info;
 
 pub struct AetherEngine {

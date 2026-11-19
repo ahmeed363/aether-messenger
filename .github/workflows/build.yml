@@ -20,9 +20,10 @@ jobs:
         with:
           targets: x86_64-unknown-linux-gnu
 
-      - name: Run Cryptographic Unit Tests
+      - name: Check and Test Full Rust Workspace
         run: |
-          cargo test -p aether-crypto -p aether-mixnet -p aether-chaff -p aether-core --verbose
+          cargo check --workspace --verbose
+          cargo test --workspace --verbose
 
   build-android-apk:
     name: Build Android APK

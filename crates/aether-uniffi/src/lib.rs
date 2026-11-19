@@ -22,7 +22,14 @@ pub enum AetherError {
     MemoryWiped,
 }
 
-// ملاحظة: هيكل MixnetStatus يتم توليده تلقائياً من aether.udl بواسطة UniFFI
+#[derive(Clone, Debug, PartialEq)]
+pub struct MixnetStatus {
+    pub connected: bool,
+    pub dummy_packets_sent: u64,
+    pub real_packets_sent: u64,
+    pub current_chaff_rate: f64,
+    pub active_circuit: String,
+}
 
 pub struct AetherSession {
     engine: Arc<Mutex<AetherEngine>>,

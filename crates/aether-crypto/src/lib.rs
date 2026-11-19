@@ -4,14 +4,12 @@
 pub mod handshake;
 
 use zeroize::{Zeroize, ZeroizeOnDrop};
-use x25519_dalek::{EphemeralSecret, PublicKey};
 use chacha20poly1305::{
     aead::{Aead, KeyInit},
     ChaCha20Poly1305, Nonce,
 };
 use sha2::Sha256;
 use hkdf::Hkdf;
-use rand::rngs::OsRng;
 use thiserror::Error;
 
 #[derive(Error, Debug)]

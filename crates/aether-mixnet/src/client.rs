@@ -3,10 +3,9 @@
 //! يتولى إرسال الحزم الحقيقية والوهمية (Sphinx Packets)، الاتصال بالبوابة (Gateway)، واستلام الرسائل دون كشف أي أثر.
 
 use crate::sphinx::{SphinxBuilder, SphinxPacket, SPHINX_PAYLOAD_SIZE};
-use crate::topology::{NetworkTopology, SelectedRoute};
-use crate::surb::SURB;
+use crate::topology::NetworkTopology;
 use tokio::sync::mpsc;
-use tracing::{info, warn};
+use tracing::info;
 
 pub struct AetherMixnetClient {
     topology: NetworkTopology,

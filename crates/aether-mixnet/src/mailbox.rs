@@ -2,8 +2,7 @@
 //! بروتوكول صندوق البريد الأعمى المؤقت (Blind Ephemeral Mixnet Mailbox).
 //! يحل مشكلة استلام الرسائل في حال كان المستلم غير متصل (Offline Messaging) دون الحاجة لأي خادم مركزي أو كشف الهوية.
 
-use crate::sphinx::{SphinxPacket, SPHINX_PAYLOAD_SIZE};
-use zeroize::{Zeroize, ZeroizeOnDrop};
+use crate::sphinx::SphinxPacket;
 use sha2::{Sha256, Digest};
 use std::collections::HashMap;
 
