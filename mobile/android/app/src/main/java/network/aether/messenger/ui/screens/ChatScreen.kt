@@ -21,7 +21,11 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import network.aether.messenger.net.AetherRelayClient
 import network.aether.messenger.ui.theme.*
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 data class Message(
     val id: String,
@@ -36,6 +40,9 @@ fun ChatScreen(onLockClicked: () -> Unit) {
     var inputText by remember { mutableStateOf("") }
     var showAttachmentSheet by remember { mutableStateOf(false) }
     var dummyCount by remember { mutableLongStateOf(14892L) }
+    var isRelayConnected by remember { mutableStateOf(false) }
+    var showIpDialog by remember { mutableStateOf(false) }
+    var serverIp by remember { mutableStateOf("192.168.1.253") }
 
     val messages = remember {
         mutableStateListOf(
@@ -44,12 +51,83 @@ fun ChatScreen(onLockClicked: () -> Unit) {
         )
     }
 
+    val timeFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
+
+    // إنشاء عميل جسر الاتصال الفوري مع نسخة الويب
+    var relayClient by remember { mutableStateOf<AetherRelayClient?>(null) }
+
+    DisposableEffect(serverIp) {
+        val client = AetherRelayClient(
+            serverUrl = "ws://$serverIp:8080/ws",
+            onMessageReceived = { id, text, isOutgoing, isMedia ->
+                messages.add(
+                    Message(
+                        id = id,
+                        text = text,
+                        isOutgoing = isOutgoing,
+                        time = timeFormat.format(Date()),
+                        isMedia = isMedia
+                    )
+                )
+            },
+            onConnectionChanged = { connected ->
+                isRelayConnected = connected
+            }
+        )
+        client.connect()
+        relayClient = client
+
+        onDispose {
+            client.disconnect()
+        }
+    }
+
     // محاكاة تدفق الحزم الوهمية
     LaunchedEffect(Unit) {
         while (true) {
             delay(2800)
             dummyCount += 1
         }
+    }
+
+    // نافذة تغيير عنوان خادم الويب
+    if (showIpDialog) {
+        var tempIp by remember { mutableStateOf(serverIp) }
+        AlertDialog(
+            onDismissRequest = { showIpDialog = false },
+            title = { Text("إعدادات ربط نسخة الويب", color = Color.White) },
+            text = {
+                Column {
+                    Text("أدخل عنوان IP للكمبيوتر المشغل لنسخة الويب:", color = MutedSlate, fontSize = 13.sp)
+                    Spacer(modifier = Modifier.height(10.dp))
+                    OutlinedTextField(
+                        value = tempIp,
+                        onValueChange = { tempIp = it },
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = CyberEmerald,
+                            unfocusedBorderColor = MutedSlate
+                        )
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    serverIp = tempIp.trim()
+                    showIpDialog = false
+                }) {
+                    Text("اتصال", color = CyberEmerald)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showIpDialog = false }) {
+                    Text("إلغاء", color = MutedSlate)
+                }
+            },
+            containerColor = CardSurface
+        )
     }
 
     Column(
@@ -94,12 +172,25 @@ fun ChatScreen(onLockClicked: () -> Unit) {
                             .padding(horizontal = 4.dp, vertical = 2.dp)
                     )
                 }
-                Text(
-                    "Cover Traffic: 1.2 pkt/s",
-                    color = MutedSlate,
-                    fontSize = 10.sp,
-                    fontFamily = FontFamily.Monospace
-                )
+                
+                // حالة الاتصال مع نسخة الويب
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable { showIpDialog = true }
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .background(if (isRelayConnected) CyberEmerald else Color.Red, CircleShape)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        if (isRelayConnected) "متصل بالويب ($serverIp)" else "غير متصل (اضغط للتعديل)",
+                        color = if (isRelayConnected) CyberEmerald else Color.Red.copy(alpha = 0.8f),
+                        fontSize = 10.sp,
+                        fontFamily = FontFamily.Monospace
+                    )
+                }
             }
 
             // Quick RAM Purge Button
@@ -181,42 +272,49 @@ fun ChatScreen(onLockClicked: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(CardSurface)
-                    .padding(vertical = 12.dp),
+                    .padding(vertical = 14.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                AttachmentItem(Icons.Default.Photo, "صور وفيديو", CyberEmerald) {
-                    messages.add(Message("${messages.size + 1}", "صورة مشفرة لمرة واحدة", true, "21:31", isMedia = true))
+                AttachmentItem(Icons.Default.Image, "صور", Color(0xFF9333EA)) {
+                    val msgText = "📷 صورة مشفرة بنظام Sphinx (1.4 MB)"
+                    messages.add(Message("${messages.size + 1}", msgText, true, timeFormat.format(Date()), isMedia = true))
+                    relayClient?.sendMessage(msgText, isMedia = true)
                     showAttachmentSheet = false
                 }
-                AttachmentItem(Icons.Default.Description, "مستند مشفر", QuantumCyan) {
-                    messages.add(Message("${messages.size + 1}", "مستند PDF مشفر", true, "21:31", isMedia = true))
+                AttachmentItem(Icons.Default.Description, "مستند", Color(0xFF2563EB)) {
+                    val msgText = "📄 مستند مشفر (secret_docs.pdf)"
+                    messages.add(Message("${messages.size + 1}", msgText, true, timeFormat.format(Date()), isMedia = true))
+                    relayClient?.sendMessage(msgText, isMedia = true)
                     showAttachmentSheet = false
                 }
-                AttachmentItem(Icons.Default.CameraAlt, "كاميرا", Color(0xFF818CF8)) {
-                    messages.add(Message("${messages.size + 1}", "لقطة كاميرا سريعة الزوال", true, "21:31", isMedia = true))
+                AttachmentItem(Icons.Default.Mic, "صوت", Color(0xFFEAB308)) {
+                    val msgText = "🎤 تسجيل صوتي مشفر (0:12)"
+                    messages.add(Message("${messages.size + 1}", msgText, true, timeFormat.format(Date()), isMedia = true))
+                    relayClient?.sendMessage(msgText, isMedia = true)
+                    showAttachmentSheet = false
+                }
+                AttachmentItem(Icons.Default.LocationOn, "موقع أعمى", Color(0xFFEF4444)) {
+                    val msgText = "📍 إحداثيات مشفرة (Blind Rendezvous Tag)"
+                    messages.add(Message("${messages.size + 1}", msgText, true, timeFormat.format(Date())))
+                    relayClient?.sendMessage(msgText)
                     showAttachmentSheet = false
                 }
             }
         }
 
-        // 5. Input Bar
+        // 5. Bottom Input Bar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(CardSurface)
-                .padding(horizontal = 10.dp, vertical = 8.dp),
+                .padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(
-                onClick = { showAttachmentSheet = !showAttachmentSheet },
-                modifier = Modifier
-                    .size(38.dp)
-                    .background(Color.Black.copy(alpha = 0.4f), CircleShape)
-            ) {
+            IconButton(onClick = { showAttachmentSheet = !showAttachmentSheet }) {
                 Icon(
-                    Icons.Default.Add,
-                    contentDescription = "Attachments",
-                    tint = if (showAttachmentSheet) CyberEmerald else Color.White
+                    imageVector = Icons.Default.AttachFile,
+                    contentDescription = "Attach",
+                    tint = if (showAttachmentSheet) CyberEmerald else MutedSlate
                 )
             }
 
@@ -243,11 +341,15 @@ fun ChatScreen(onLockClicked: () -> Unit) {
             IconButton(
                 onClick = {
                     if (inputText.isNotBlank()) {
-                        messages.add(Message("${messages.size + 1}", inputText, true, "21:31"))
+                        val text = inputText.trim()
+                        messages.add(Message("${messages.size + 1}", text, true, timeFormat.format(Date())))
+                        relayClient?.sendMessage(text)
                         inputText = ""
                     } else {
                         // إرسال صوتي
-                        messages.add(Message("${messages.size + 1}", "🎤 رسالة صوتية مشفرة (0:04 ثانية)", true, "21:31"))
+                        val audioText = "🎤 رسالة صوتية مشفرة (0:04 ثانية)"
+                        messages.add(Message("${messages.size + 1}", audioText, true, timeFormat.format(Date())))
+                        relayClient?.sendMessage(audioText)
                     }
                 },
                 modifier = Modifier

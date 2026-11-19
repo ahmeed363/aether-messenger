@@ -73,4 +73,5 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.biometric:biometric:1.1.0")
     implementation("net.java.dev.jna:jna:5.14.0@aar")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }
